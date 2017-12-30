@@ -41,7 +41,6 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // else generate userID
         userID = userID || shortid.generate();
         
-        
         res.render('index', { 'userID' : userID });
         // window.onbeforeunload = function() {
         //     alert('hi');
