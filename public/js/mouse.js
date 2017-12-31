@@ -1,34 +1,34 @@
 
-var eventTimer = 0;
-var sessionData = [];
+// var eventTimer = 0;
+var sessionData = {};
 var ring, dot, eventDoc, doc, body, pageX, pageY;
 var cursorPosition = [0,0];
+var momentFormat = 'MM/DD/YYYY hh:mm:ss:SSS';
+// console.log(userID);
 
 window.onload = function() {
     handleKeyPress();
     handleClick();
-    // console.log(userID);
     document.onmousemove = handleMouseMove;
     setInterval( function() {
-        if(eventTimer % 1 == 0 && sessionData.length > 0){
-            $.post("http://localhost:3000/save",
-                JSON.stringify(sessionData),
-                function(data) {
-                    if(data === 'done') {
-                        console.log("ajax success");
-                        sessionData = [];
-                    }
-                });
-            }
+        if(!$.isEmptyObject(sessionData)){
+            $.post("http://localhost:3000/save", sessionData, function(data) {
+                if(data === 'done') {
+                    console.log("ajax success");
+                    sessionData = {};
+                }
+            });
+        }
+
     }, 1000);
 
 }
 
+function gatherEventData(eventData) {
+    Object.assign(sessionData, eventData);
+}
 
 function handleMouseMove(event) {
-
-
-
     event = event || window.event; // IE-ism
 
     // IfpageX/Y aren't available and clientX/Y
@@ -56,8 +56,8 @@ function handleMouseMove(event) {
 
     cursorPosition = [event.pageX, event.pageY];
 
-    sessionData.push({
-        "completionTime": moment().toString(),
+    gatherEventData({
+        "completionTime": moment().format(momentFormat).toString(),
         "eventType": "cursor-move",
         "coordinates": cursorPosition
     });
@@ -72,8 +72,8 @@ function handleKeyPress(){
 
         console.log(`Key pressed ${keyName}`);
 
-        sessionData.push({
-            "completionTime": moment().toString(),
+        gatherEventData({
+            "completionTime": moment().format(momentFormat).toString(),
             "eventType": "keydown",
             "keyPressed": keyName
         });
@@ -89,13 +89,13 @@ function handleClick() {
         ring.style.top = cursorPosition[1] + "px";
         $(document.body.appendChild(ring)).fadeOut(4000, function(){$(this).remove()});
 
-        sessionData.push({
-            "completionTime": moment().toString(),
+        gatherEventData({
+            "completionTime": moment().format(momentFormat).toString(),
             "eventType": "mousedown",
             "coordinates": cursorPosition,
             "targetElement": event.target
         });
-    }, false); //first
+    }, false);
 
     // document.addEventListener("mouseup", (event)=>{}, false); //second
     // document.addEventListener("click", (event)=>{}, false); // third
