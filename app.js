@@ -55,7 +55,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // }
         // else {
         
-        db.collection('test').insert(req.body);
+        // db.collection('test').insert(req.body);
         
         // res.sendFile('views/success.html', {root: __dirname });
 

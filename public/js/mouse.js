@@ -1,6 +1,6 @@
 
 // var eventTimer = 0;
-var sessionData = {};
+var sessionData = [];
 var ring, dot, eventDoc, doc, body, pageX, pageY;
 var cursorPosition = [0,0];
 var momentFormat = 'MM/DD/YYYY hh:mm:ss:SSS';
@@ -11,21 +11,22 @@ window.onload = function() {
     handleClick();
     document.onmousemove = handleMouseMove;
     setInterval( function() {
-        if(!$.isEmptyObject(sessionData)){
-            $.post("http://localhost:3000/save", sessionData, function(data) {
+        if(sessionData.length){
+            console.log(sessionData);
+            $.post("http://localhost:3000/save", {sessionData}, function(data) {
                 if(data === 'done') {
                     console.log("ajax success");
-                    sessionData = {};
+                    sessionData = [];
                 }
             });
         }
 
-    }, 1000);
+    }, 2000);
 
 }
 
 function gatherEventData(eventData) {
-    Object.assign(sessionData, eventData);
+    sessionData.push(eventData);
 }
 
 function handleMouseMove(event) {
@@ -88,12 +89,22 @@ function handleClick() {
         ring.style.left = cursorPosition[0] + "px";
         ring.style.top = cursorPosition[1] + "px";
         $(document.body.appendChild(ring)).fadeOut(4000, function(){$(this).remove()});
+    
 
+        function simpleKeys (original) {
+          return Object.keys(original).reduce(function (obj, key) {
+            obj[key] = typeof original[key] === 'object' ? '{ ... }' : original[key];
+            return obj;
+          }, {});
+        }
+        let el = event.target.className !== '' ? event.target.className.split(/\s+/) : event.target.tagName.toLowerCase() ;
+        console.log(el, "\n", event.target.tagName );
         gatherEventData({
             "completionTime": moment().format(momentFormat).toString(),
             "eventType": "mousedown",
             "coordinates": cursorPosition,
-            "targetElement": event.target
+            "targetTag": event.target.tagName.toLowerCase(),
+            "targetClass": event.target.className.split(/\s+/)
         });
     }, false);
 
