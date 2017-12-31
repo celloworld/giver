@@ -1,15 +1,15 @@
 
 var eventTimer = 0;
 var sessionData = [];
-//     userID: {}}
-
+var ring, dot, eventDoc, doc, body, pageX, pageY;
+var cursorPosition = [0,0];
 
 window.onload = function() {
     handleKeyPress();
+    handleClick();
     // console.log(userID);
     document.onmousemove = handleMouseMove;
     setInterval( function() {
-        eventTimer += .5;
         if(eventTimer % 1 == 0 && sessionData.length > 0){
             $.post("http://localhost:3000/save",
                 JSON.stringify(sessionData),
@@ -20,29 +20,14 @@ window.onload = function() {
                     }
                 });
             }
-    }, 500);
+    }, 1000);
 
 }
 
-function resetEventTimer(){
-    eventTimer = 0;
-}
-
-function packageEvent(eventData) {
-    
-    // TODO: post event to express connect to mongo
-    // TODO: post event to express connect to mongo
-    sessionData.push(eventData);
-    // model eventData = {
-    //  "startingFrame": 5,
-    //  "duration": 3.222,
-    //  "eventType": "inactivity"
-    // }
-}
 
 function handleMouseMove(event) {
-    resetEventTimer()
-    var dot, eventDoc, doc, body, pageX, pageY;
+
+
 
     event = event || window.event; // IE-ism
 
@@ -69,50 +54,49 @@ function handleMouseMove(event) {
     dot.style.top = event.pageY + "px";
     $(document.body.appendChild(dot)).fadeOut(4000, function(){$(this).remove()});
 
-    packageEvent({
+    cursorPosition = [event.pageX, event.pageY];
+
+    sessionData.push({
         "completionTime": moment().toString(),
-        "duration": 0,
         "eventType": "cursor-move",
-        "position": [event.pageX, event.pageY]
+        "coordinates": cursorPosition
     });
 }
 
 
 function handleKeyPress(){
+    //TODO: log where the dom focus is while they type
+
     document.addEventListener('keydown', (event) => {
         const keyName = event.key;
 
         console.log(`Key pressed ${keyName}`);
 
-        // if(event.key == 'ArrowUp'){
-        //     fps++;
-        //     console.log(`fps: ${fps} \nballVelocity: ${ballVelocity}`);
-        // }
-        // if(event.key == 'ArrowDown'){
-        //     fps--;
-        //     console.log(`fps: ${fps} \nballVelocity: ${ballVelocity}`);
-        // }
-
-        // if (event.key == 'b'){
-        //     logLevel++;
-        //     switch (logLevel % 4) {
-        //         case 1:
-        //             logEnabled = true;
-        //             console.log("LOG ENABLED -- LOG LVL 1 - BASIC");
-        //             break;
-        //         case 2:
-        //             console.log("LOG ENABLED -- LOG LVL 2 - DEV");
-        //             break;
-        //         case 3:
-        //             console.log("LOG ENABLED -- LOG LVL 3 - MATH");
-        //             break;
-        //         case 0:
-        //             logEnabled = false;
-        //             console.log("LOG DISABLED");
-        //             break;
-
-        //     }
-        // }
+        sessionData.push({
+            "completionTime": moment().toString(),
+            "eventType": "keydown",
+            "keyPressed": keyName
+        });
     }, false);
 }
 
+function handleClick() {
+    
+    document.addEventListener("mousedown", (event) => {
+        ring = document.createElement('div');
+        ring.className = "ring";
+        ring.style.left = cursorPosition[0] + "px";
+        ring.style.top = cursorPosition[1] + "px";
+        $(document.body.appendChild(ring)).fadeOut(4000, function(){$(this).remove()});
+
+        sessionData.push({
+            "completionTime": moment().toString(),
+            "eventType": "mousedown",
+            "coordinates": cursorPosition,
+            "targetElement": event.target
+        });
+    }, false); //first
+
+    // document.addEventListener("mouseup", (event)=>{}, false); //second
+    // document.addEventListener("click", (event)=>{}, false); // third
+}
