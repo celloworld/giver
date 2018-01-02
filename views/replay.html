@@ -13,10 +13,10 @@
 <script src="/moment/moment.min.js"></script>
 </head>
 <body>
-    <h1>User Data</h1>
+    <h1>Replay Data</h1>
     <ul>
-    {% for user in userList %}
-        <li><a href="/replay?user={{user._id}}">{{user._id}}</a></li>
+    {% for event in eventList %}
+        <li>{{event.eventType}}</li>
     {% endfor %}
     </ul>
 </body>

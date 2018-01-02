@@ -39,7 +39,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // if user exists, get id, insert visit date and duration to user profile
         
         // else generate userID
-        userID = userID || shortid.generate();
+        // userID = userID || shortid.generate();
         res.render('index', { 'userID' : userID });
         // window.onbeforeunload = function() {
         //     alert('hi');
@@ -69,6 +69,31 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log(docs);
         });;
     })
+    app.get('/replay', function(req, res, next) {
+        let user = 'ObjectId("' + req.query.user + '")';
+        console.log(user);
+        if(!user){
+            console.log(req.query, "\ndidn't work");
+            res.redirect('/history');
+        } else{
+            var userData = db.collection('test').find({_id: user}).toArray(function(err, docs) {
+                console.log(docs);
+                if(err)console.log(err);
+                // console.log(docs);
+                res.render('replay', {'eventList': docs});
+            })
+        }
+        // TODO: compare incoming user profile against preceding profiles
+        // if user exists, get id, insert visit date and duration to user profile
+        
+        // else generate userID
+        // userID = userID || shortid.generate();
+        // res.render('replay', { 'userID' : userID });
+        // window.onbeforeunload = function() {
+        //     alert('hi');
+        //     db.collection(today).insert(sessionEvents);
+        // }
+    });
     
     app.use(errorHandler);
 
