@@ -46,7 +46,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         //     db.collection(today).insert(sessionEvents);
         // }
     });
-    app.post('/save', function(req, res) {
+    app.post('/save', function(req, res, next) {
         console.log(req.body);
         // console.log("req.body: ", req.body);
         // console.log(movie, typeof movie.imdb, typeof movie.title, typeof movie.year, typeof movie);
@@ -55,13 +55,20 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // }
         // else {
         
-        // db.collection('test').insert(req.body);
+        db.collection('test').insert(req.body);
         
         // res.sendFile('views/success.html', {root: __dirname });
 
         // }
         res.end("done");
     });
+
+    app.get('/history', function(req, res, next){
+        var userList = db.collection('test').find({},{_id:1}).toArray(function(err, docs) {
+            res.render('history', { 'userList' : docs });
+            console.log(docs);
+        });;
+    })
     
     app.use(errorHandler);
 
