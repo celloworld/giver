@@ -6,7 +6,8 @@ var express = require('express'),
     assert = require('assert'),
     moment = require('moment'),
     shortid = require('shortid'),
-    userID = shortid.generate();
+    userID = shortid.generate(),
+    ObjectId = require('mongodb').ObjectID;
 
 app.engine('html', engines.nunjucks);
 app.set('view engine', 'html');
@@ -17,10 +18,14 @@ app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
 app.use('/moment', express.static(__dirname + '/node_modules/moment/min/'));
 app.use('/public', express.static(__dirname + '/public'));
 
+function cl(el){console.log(el)};
+
 // Handler for internal server errors
 function errorHandler(err, req, res, next) {
-    console.error(err.message);
-    console.error(err.stack);
+    if(err){
+        console.error("error message:\n", err.message);
+        console.error("error stack:\n", err.stack);
+    }
     res.status(500).render('error_template', { error: err });
 }
 
@@ -70,18 +75,24 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         });;
     })
     app.get('/replay', function(req, res, next) {
-        let user = 'ObjectId("' + req.query.user + '")';
-        console.log(user);
+        let user = new ObjectId(req.query.user);
+        cl(user);
         if(!user){
-            console.log(req.query, "\ndidn't work");
+            console.log("FAILED TO FIND USER!\nquery: " + req.query);
             res.redirect('/history');
         } else{
-            var userData = db.collection('test').find({_id: user}).toArray(function(err, docs) {
-                console.log(docs);
-                if(err)console.log(err);
+            var userData = db.collection('test').findOne({"_id": user});
+            userData.then((doc) => {
+                cl(doc);
+                res.render('replay', {'eventList': doc.sessionData});
+            });
+                // if(err)console.log(err);
                 // console.log(docs);
-                res.render('replay', {'eventList': docs});
-            })
+            // })
+            // db.collection('movies').find({}).toArray(function(err, docs) {
+            // res.render('movies', { 'movies': docs } );
+        // });
+
         }
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
