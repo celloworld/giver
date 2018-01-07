@@ -83,8 +83,11 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         } else{
             var userData = db.collection('test').findOne({"_id": user});
             userData.then((doc) => {
-                cl(doc);
-                res.render('replay', {'eventList': doc.sessionData});
+                // cl(doc[0]);
+                res.render('replay', {
+                    'eventList': doc.sessionData,
+                    userId: req.query.user
+                });
             });
                 // if(err)console.log(err);
                 // console.log(docs);
@@ -104,6 +107,19 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         //     alert('hi');
         //     db.collection(today).insert(sessionEvents);
         // }
+    });
+    app.get('/user/:userId/events', function(req, res, next) {
+        let user = new ObjectId(req.params.userId);
+        cl(user);
+        if(!user){
+            console.log("FAILED TO FIND USER!\nquery: " + req.query);
+            response.status(404).json({error: "FAILED TO FIND USER!"});
+        } else{
+            var userData = db.collection('test').findOne({"_id": user});
+            userData.then((doc) => {
+                res.json(doc.sessionData)
+            });
+        }
     });
     
     app.use(errorHandler);

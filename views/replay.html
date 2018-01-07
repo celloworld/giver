@@ -14,11 +14,38 @@
 </head>
 <body>
     <h1>Replay Data</h1>
+    <button class="jsReplayButton">Replay</button>
     <ul>
     {% for event in eventList %}
         <li>{{event.eventType}}</li>
     {% endfor %}
     </ul>
+    <script>
+            let eventIntervals = [];
+            var eList = [];
+            let i = 0;
+            $.get('/user/{{userId}}/events').done(function(data) {
+                console.log(data);
+            });
+            // for(i; i < eventList.length; i++) event in eventList){
+            //     eList[i] = Object.assign({}, event);
+            //     console.log(event);
+            // }
+            // console.log("eList", eList);
+            // for(let i = 1; i< eList.length + 1; i++ ) {
+            //     eventIntervals.push(moment(eList[i].completionTime).subtract(moment(eList[i-1].completionTime)).valueOf());
+            //     console.log("eventIntervals:", eventIntervals);
+            // }
+            // $('.jsReplayButton').on('click', () => {
+            //     for(let i = 0; i < eList.length; i++ ) {
+            //         eventIntervals.push(moment(eList[i].completionTime).subtract(moment(eList[i-1].completionTime)).valueOf());
+            //     }   
+            //     var e0 = moment(eList[0].completionTime);
+            //     var t0 = moment().subtract(e0).format('hh:mm:ss.SSS');
+
+            //     setInterval(() => document.body.innerHTML = t0, 100)
+            // });
+    </script>
 </body>
 
 
