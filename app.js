@@ -86,17 +86,29 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
                 // cl(doc[0]);
                 res.render('replay', {
                     'eventList': doc.sessionData,
-                    userId: req.query.user
+                    'userId': req.query.user,
+                    'eventIntervals': calculateEventTiming(doc.sessionData)
                 });
             });
-                // if(err)console.log(err);
-                // console.log(docs);
-            // })
-            // db.collection('movies').find({}).toArray(function(err, docs) {
-            // res.render('movies', { 'movies': docs } );
-        // });
-
         }
+
+        function calculateEventTiming(sessionData){
+            var eventIntervals = [];
+            for(let i = 0; i < sessionData.length; i++ ) {
+                let completionTime = moment(sessionData[i].completionTime).clone();            
+                let nextEvent = sessionData[i+1];
+            
+                // yes, a ternary op would do, but it's not easy to read
+                // calculate the time between events based on whether the next event has a duration or is instantaneous
+                if(nextEvent.hasOwnProperty("duration")){
+                    let nextEventStartTime = moment(nextEvent.completionTime).clone().subtract(nextEvent.duration()).toValue();
+                } else {
+                    let nextEventStartTime = moment(nextEvent.completionTime).clone().toValue();
+                }
+                
+                eventIntervals.push(nextEventStartTime - completionTime);
+            };
+        };
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
         
