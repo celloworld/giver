@@ -1,12 +1,12 @@
-
+(function(){
 // var eventTimer = 0;
-var sessionData = [];
 var ring, dot, eventDoc, doc, body, pageX, pageY;
 var cursorPosition = [0,0];
 var momentFormat = 'MM/DD/YYYY hh:mm:ss:SSS';
 // console.log(userID);
 
 window.onload = function() {
+    var sessionData = [];
     handleKeyPress();
     handleClick();
     document.onmousemove = handleMouseMove;
@@ -111,3 +111,4 @@ function handleClick() {
     // document.addEventListener("mouseup", (event)=>{}, false); //second
     // document.addEventListener("click", (event)=>{}, false); // third
 }
+})();

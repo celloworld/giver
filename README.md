@@ -2,6 +2,8 @@
 
 Tracks user events with the intended goal of realtime playback.
 TODO: sniff client specs (window size, operating system, browser/version, etc.)
+    considering: https://github.com/matomo-org/device-detector
+
 TODO: add screenshot library to support and validate sniffed client specs
 
 ### Express/node app not tested and barely working sometimes with following dependencies:
