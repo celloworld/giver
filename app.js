@@ -6,7 +6,7 @@ var express = require('express'),
     assert = require('assert'),
     moment = require('moment'),
     shortid = require('shortid'),
-    userID = shortid.generate(),
+    userID = null,
     ObjectId = require('mongodb').ObjectID;
 
 app.engine('html', engines.nunjucks);
@@ -59,8 +59,15 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             // next('Please fill out the form completely!');
         // }
         // else {
-        
-        db.collection('test').insert(req.body);
+        let eventData = req.body;
+        if (userID) {
+            db.collection('test').update({"_id": userID}, { $push: {"sessionData": { $each: eventData.sessionData});
+        } else {
+            db.collection('test').insertOne(eventData, function(err, doc){
+                if (err) {console.error(err)}
+                else {userID = doc._id}
+            });
+        }
         
         // res.sendFile('views/success.html', {root: __dirname });
 
@@ -86,29 +93,10 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
                 // cl(doc[0]);
                 res.render('replay', {
                     'eventList': doc.sessionData,
-                    'userId': req.query.user,
-                    'eventIntervals': calculateEventTiming(doc.sessionData)
+                    'userId': req.query.user
                 });
             });
         }
-
-        function calculateEventTiming(sessionData){
-            var eventIntervals = [];
-            for(let i = 0; i < sessionData.length; i++ ) {
-                let completionTime = moment(sessionData[i].completionTime).clone();            
-                let nextEvent = sessionData[i+1];
-            
-                // yes, a ternary op would do, but it's not easy to read
-                // calculate the time between events based on whether the next event has a duration or is instantaneous
-                if(nextEvent.hasOwnProperty("duration")){
-                    let nextEventStartTime = moment(nextEvent.completionTime).clone().subtract(nextEvent.duration()).toValue();
-                } else {
-                    let nextEventStartTime = moment(nextEvent.completionTime).clone().toValue();
-                }
-                
-                eventIntervals.push(nextEventStartTime - completionTime);
-            };
-        };
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
         
