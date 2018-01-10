@@ -9,6 +9,7 @@ var express = require('express'),
     userID = null,
     ObjectId = require('mongodb').ObjectID;
 
+app.use(errorHandler);
 app.engine('html', engines.nunjucks);
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
@@ -52,27 +53,23 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // }
     });
     app.post('/save', function(req, res, next) {
-        console.log(req.body);
-        // console.log("req.body: ", req.body);
-        // console.log(movie, typeof movie.imdb, typeof movie.title, typeof movie.year, typeof movie);
-        // if (typeof movie.imdb != 'string' || typeof movie.title != 'string' || typeof movie.year != 'string') {
-            // next('Please fill out the form completely!');
-        // }
-        // else {
+        // console.log(req.body);
         let eventData = req.body;
+
         if (userID) {
-            db.collection('test').update({"_id": userID}, { $push: {"sessionData": { $each: eventData.sessionData});
+            db.collection('test').update({"_id": userID}, { $push: { "sessionData": { $each: eventData.sessionData} } }, function(err, doc){
+                if (err) {errorHandler(err)}
+                else res.end("updated ", userID, " with ", eventData.sessionData.length, " events");
+            });
         } else {
             db.collection('test').insertOne(eventData, function(err, doc){
-                if (err) {console.error(err)}
-                else {userID = doc._id}
+                if (err) {errorHandler(err)}
+                else {
+                    userID = doc._id
+                    res.send(JSON.stringify({"$$$": eventData, "docID": doc._id}));
+                }
             });
         }
-        
-        // res.sendFile('views/success.html', {root: __dirname });
-
-        // }
-        res.end("done");
     });
 
     app.get('/history', function(req, res, next){
@@ -122,7 +119,6 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         }
     });
     
-    app.use(errorHandler);
 
     var server = app.listen(3000, function() {
         var port = server.address().port;

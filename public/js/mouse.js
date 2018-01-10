@@ -14,10 +14,11 @@
             if(sessionData.length){
                 console.log(sessionData);
                 $.post("http://localhost:3000/save", {"sessionData": sessionData}, function(data) {
-                    if(data === 'done') {
-                        console.log("ajax success");
-                        sessionData = [];
-                    }
+                    // if(data === 'done') {
+                        console.log("ajax success", data);
+                    // }
+                    // if(typeof data == "object" && data.hasOwnProperty('$$$')) console.log(data);
+                    sessionData = [];
                 });
             }
         }, 2000);
