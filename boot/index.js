@@ -15,7 +15,7 @@ module.exports = function boot (app) {
 
     config(app);
 
-    MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
+    MongoClient.connect(mongoConnStr, function(err, db) {
 
         if (err) throw err;
 
