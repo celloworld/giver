@@ -6,7 +6,6 @@ var express = require('express'),
     assert = require('assert'),
     moment = require('moment'),
     shortid = require('shortid'),
-    userID = null,
     ObjectId = require('mongodb').ObjectID;
 
 app.use(errorHandler);
@@ -54,21 +53,23 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
     });
     app.post('/save', function(req, res, next) {
         // console.log(req.body);
-        let eventData = req.body;
-
+        let eventData = req.body.sessionData;
+        let userID = req.body.userID || null;
         if (userID) {
             db.collection('test').update({"_id": userID}, { $push: { "sessionData": { $each: eventData.sessionData} } }, function(err, doc){
                 if (err) {errorHandler(err)}
                 else res.end("updated ", userID, " with ", eventData.sessionData.length, " events");
             });
         } else {
-            db.collection('test').insertOne(eventData, function(err, doc){
-                if (err) {errorHandler(err)}
-                else {
-                    userID = doc._id
-                    res.send(JSON.stringify({"$$$": eventData, "docID": doc._id}));
-                }
-            });
+            db.collection('test').insertOne(eventData)
+            .then(function(result) {
+                userID = result.insertedId;
+                console.log(userID);
+                res.send(JSON.stringify({"userID": userID}));
+            })
+            .catch(function(err) {
+                errorHandler(err);
+            })
         }
     });
 
