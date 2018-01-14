@@ -30,7 +30,7 @@ function errorHandler(err, req, res, next) {
 }
 
 MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
-
+    let testColldb = db.collection('test');
     assert.equal(null, err, "error connecting to MongoClient @ __dirname");
     console.log("Successfully connected to MongoDB... sweeeet");
 
@@ -42,39 +42,43 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         console.log(today);
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
-        
+        function checkUserForCookie(){
+            // TODO: Aggregate a timeline across multiple sessions for returning users
+            // TODO: return UserID to index
+        };
         // else generate userID
         // userID = userID || shortid.generate();
-        res.render('index', { 'userID' : userID });
+        res.render('index', checkUserForCookie());
         // window.onbeforeunload = function() {
         //     alert('hi');
         //     db.collection(today).insert(sessionEvents);
         // }
     });
     app.post('/save', function(req, res, next) {
-        // console.log(req.body);
-        let eventData = req.body.sessionData;
+        console.log(req.body);
+        let sessionData = req.body.sessionData;
         let userID = req.body.userID || null;
         if (userID) {
-            db.collection('test').update({"_id": userID}, { $push: { "sessionData": { $each: eventData.sessionData} } }, function(err, doc){
-                if (err) {errorHandler(err)}
-                else res.end("updated ", userID, " with ", eventData.sessionData.length, " events");
-            });
-        } else {
-            db.collection('test').insertOne(eventData)
-            .then(function(result) {
-                userID = result.insertedId;
-                console.log(userID);
-                res.send(JSON.stringify({"userID": userID}));
+            testColldb.update({"_id": userID}, { $push: { "sessionData": { $each: sessionData} } })
+            .then(function(doc) {
+                res.json({message: "updated " + userID + " with " + sessionData.length + " events", insertedId: userID});
             })
             .catch(function(err) {
                 errorHandler(err);
+            });
+        } else {
+            testColldb.insertOne({"sessionData": sessionData})
+            .then(function(result) {
+                res.json({message: 'created user with _id: ' + result.insertedId, insertedId: result.insertedId});
             })
+            .catch(function(err) {
+                errorHandler(err);
+            });
         }
     });
 
     app.get('/history', function(req, res, next){
-        var userList = db.collection('test').find({},{_id:1}).toArray(function(err, docs) {
+        var userList = testColldb.find({},{_id:1}).toArray(function(err, docs) {
             res.render('history', { 'userList' : docs });
             console.log(docs);
         });;
@@ -86,7 +90,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log("FAILED TO FIND USER!\nquery: " + req.query);
             res.redirect('/history');
         } else{
-            var userData = db.collection('test').findOne({"_id": user});
+            var userData = testColldb.findOne({"_id": user});
             userData.then((doc) => {
                 // cl(doc[0]);
                 res.render('replay', {
@@ -113,7 +117,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log("FAILED TO FIND USER!\nquery: " + req.query);
             response.status(404).json({error: "FAILED TO FIND USER!"});
         } else{
-            var userData = db.collection('test').findOne({"_id": user});
+            var userData = testColldb.findOne({"_id": user});
             userData.then((doc) => {
                 res.json(doc.sessionData)
             });

@@ -1,5 +1,8 @@
 (function(){
-    var sessionData = [];
+    var userData = {
+        userID: null,
+        sessionData: []
+    }
     var momentFormat = 'MM/DD/YYYY hh:mm:ss:SSS';
     var sessionBegan = moment().format(momentFormat);
     var ring, dot, eventDoc, doc, body, pageX, pageY;
@@ -11,14 +14,15 @@
         handleClick();
         document.onmousemove = handleMouseMove;
         setInterval( function() {
-            if(sessionData.length){
-                console.log(sessionData);
-                $.post("http://localhost:3000/save", {"sessionData": sessionData}, function(data) {
-                    // if(data === 'done') {
-                        console.log("ajax success", data);
+            if(userData.sessionData.length){
+                console.log(userData.sessionData);
+                $.post("http://localhost:3000/save", userData, function(response) {
+                    // if(insertedID === 'done') {
+                        console.log("ajax success!\n", response.message);
                     // }
-                    // if(typeof data == "object" && data.hasOwnProperty('$$$')) console.log(data);
-                    sessionData = [];
+                    // if(typeof insertedID == "object" && insertedID.hasOwnProperty('$$$')) console.log(insertedID);
+                    userData.sessionData = [];
+                    userData.userID = userData.userID || response.insertedId;
                 });
             }
         }, 2000);
@@ -27,7 +31,7 @@
 
     function gatherEventData(eventData) {
         lastEventCompletionTime = eventData.completionTime;
-        sessionData.push(eventData);
+        userData.sessionData.push(eventData);
     }
 
     function handleMouseMove(event) {
