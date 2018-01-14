@@ -6,9 +6,9 @@ var express = require('express'),
     assert = require('assert'),
     moment = require('moment'),
     shortid = require('shortid'),
-    userID = shortid.generate(),
     ObjectId = require('mongodb').ObjectID;
 
+app.use(errorHandler);
 app.engine('html', engines.nunjucks);
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
@@ -30,7 +30,7 @@ function errorHandler(err, req, res, next) {
 }
 
 MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
-
+    let testColldb = db.collection('test');
     assert.equal(null, err, "error connecting to MongoClient @ __dirname");
     console.log("Successfully connected to MongoDB... sweeeet");
 
@@ -42,10 +42,13 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         console.log(today);
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
-        
+        function checkUserForCookie(){
+            // TODO: Aggregate a timeline across multiple sessions for returning users
+            // TODO: return UserID to index
+        };
         // else generate userID
         // userID = userID || shortid.generate();
-        res.render('index', { 'userID' : userID });
+        res.render('index', checkUserForCookie());
         // window.onbeforeunload = function() {
         //     alert('hi');
         //     db.collection(today).insert(sessionEvents);
@@ -53,23 +56,29 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
     });
     app.post('/save', function(req, res, next) {
         console.log(req.body);
-        // console.log("req.body: ", req.body);
-        // console.log(movie, typeof movie.imdb, typeof movie.title, typeof movie.year, typeof movie);
-        // if (typeof movie.imdb != 'string' || typeof movie.title != 'string' || typeof movie.year != 'string') {
-            // next('Please fill out the form completely!');
-        // }
-        // else {
-        
-        db.collection('test').insert(req.body);
-        
-        // res.sendFile('views/success.html', {root: __dirname });
-
-        // }
-        res.end("done");
+        let sessionData = req.body.sessionData;
+        let userID = req.body.userID || null;
+        if (userID) {
+            testColldb.update({"_id": userID}, { $push: { "sessionData": { $each: sessionData} } })
+            .then(function(doc) {
+                res.json({message: "updated " + userID + " with " + sessionData.length + " events", insertedId: userID});
+            })
+            .catch(function(err) {
+                errorHandler(err);
+            });
+        } else {
+            testColldb.insertOne({"sessionData": sessionData})
+            .then(function(result) {
+                res.json({message: 'created user with _id: ' + result.insertedId, insertedId: result.insertedId});
+            })
+            .catch(function(err) {
+                errorHandler(err);
+            });
+        }
     });
 
     app.get('/history', function(req, res, next){
-        var userList = db.collection('test').find({},{_id:1}).toArray(function(err, docs) {
+        var userList = testColldb.find({},{_id:1}).toArray(function(err, docs) {
             res.render('history', { 'userList' : docs });
             console.log(docs);
         });;
@@ -81,34 +90,15 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log("FAILED TO FIND USER!\nquery: " + req.query);
             res.redirect('/history');
         } else{
-            var userData = db.collection('test').findOne({"_id": user});
+            var userData = testColldb.findOne({"_id": user});
             userData.then((doc) => {
                 // cl(doc[0]);
                 res.render('replay', {
                     'eventList': doc.sessionData,
-                    'userId': req.query.user,
-                    'eventIntervals': calculateEventTiming(doc.sessionData)
+                    'userId': req.query.user
                 });
             });
         }
-
-        function calculateEventTiming(sessionData){
-            var eventIntervals = [];
-            for(let i = 0; i < sessionData.length; i++ ) {
-                let completionTime = moment(sessionData[i].completionTime).clone();            
-                let nextEvent = sessionData[i+1];
-            
-                // yes, a ternary op would do, but it's not easy to read
-                // calculate the time between events based on whether the next event has a duration or is instantaneous
-                if(nextEvent.hasOwnProperty("duration")){
-                    let nextEventStartTime = moment(nextEvent.completionTime).clone().subtract(nextEvent.duration()).toValue();
-                } else {
-                    let nextEventStartTime = moment(nextEvent.completionTime).clone().toValue();
-                }
-                
-                eventIntervals.push(nextEventStartTime - completionTime);
-            };
-        };
         // TODO: compare incoming user profile against preceding profiles
         // if user exists, get id, insert visit date and duration to user profile
         
@@ -127,14 +117,13 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log("FAILED TO FIND USER!\nquery: " + req.query);
             response.status(404).json({error: "FAILED TO FIND USER!"});
         } else{
-            var userData = db.collection('test').findOne({"_id": user});
+            var userData = testColldb.findOne({"_id": user});
             userData.then((doc) => {
                 res.json(doc.sessionData)
             });
         }
     });
     
-    app.use(errorHandler);
 
     var server = app.listen(3000, function() {
         var port = server.address().port;
