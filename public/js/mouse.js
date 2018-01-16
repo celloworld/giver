@@ -108,17 +108,10 @@
         document.addEventListener("mousedown", (event) => {
             ring = document.createElement('div');
             ring.className = "ring";
-            ring.style.left = cursorPosition[0] + "px";
-            ring.style.top = cursorPosition[1] + "px";
+            ring.style.left = cursorPosition.x + "px";
+            ring.style.top = cursorPosition.y + "px";
             $(document.body.appendChild(ring)).fadeOut(4000, function(){$(this).remove()});
         
-
-            function simpleKeys (original) {
-              return Object.keys(original).reduce(function (obj, key) {
-                obj[key] = typeof original[key] === 'object' ? '{ ... }' : original[key];
-                return obj;
-              }, {});
-            }
             let el = event.target.className !== '' ? event.target.className.split(/\s+/) : event.target.tagName.toLowerCase() ;
             console.log(el, "\n", event.target.tagName );
             gatherEventData({
