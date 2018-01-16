@@ -40,22 +40,17 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         // }
         var today = moment().format('MM/DD/YYYY hh:mm:ss.SSS').toString();
         console.log(today);
-        // TODO: compare incoming user profile against preceding profiles
-        // if user exists, get id, insert visit date and duration to user profile
         function checkUserForCookie(){
+            // TODO: compare incoming user profile against preceding profiles
+            //       if user exists, get id, insert visit date and duration to user profile
             // TODO: Aggregate a timeline across multiple sessions for returning users
             // TODO: return UserID to index
+            return;
         };
-        // else generate userID
-        // userID = userID || shortid.generate();
         res.render('index', checkUserForCookie());
-        // window.onbeforeunload = function() {
-        //     alert('hi');
-        //     db.collection(today).insert(sessionEvents);
-        // }
     });
     app.post('/save', function(req, res, next) {
-        console.log(req.body);
+        // TODO: make sure req.body looks right, it should have keys: sessionData, userID
         let sessionData = req.body.sessionData;
         let userID = req.body.userID || null;
         if (userID) {
@@ -83,6 +78,7 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
             console.log(docs);
         });;
     })
+
     app.get('/replay', function(req, res, next) {
         let user = new ObjectId(req.query.user);
         cl(user);
@@ -92,24 +88,14 @@ MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
         } else{
             var userData = testColldb.findOne({"_id": user});
             userData.then((doc) => {
-                // cl(doc[0]);
                 res.render('replay', {
                     'eventList': doc.sessionData,
                     'userId': req.query.user
                 });
             });
         }
-        // TODO: compare incoming user profile against preceding profiles
-        // if user exists, get id, insert visit date and duration to user profile
-        
-        // else generate userID
-        // userID = userID || shortid.generate();
-        // res.render('replay', { 'userID' : userID });
-        // window.onbeforeunload = function() {
-        //     alert('hi');
-        //     db.collection(today).insert(sessionEvents);
-        // }
     });
+
     app.get('/user/:userId/events', function(req, res, next) {
         let user = new ObjectId(req.params.userId);
         cl(user);
