@@ -1,0 +1,25 @@
+ul {
+    -webkit-padding-start:0;
+    padding-left:10px;
+}
+li {
+    list-style: none;
+}
+.dot {
+    width: 2px;
+    height: 2px;
+    background-color: blue;
+    position: absolute;
+    margin-top: -1px;
+    margin-left: -1px;
+}
+.ring {
+    width: 5px;
+    height: 5px;
+    background-color: transparent;
+    border: 2px solid red;
+    position: absolute;
+    border-radius: 5px;
+    margin-top: -4px;
+    margin-left: -4px;
+}

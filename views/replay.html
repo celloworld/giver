@@ -1,16 +1,8 @@
 <html>
 <head>
-    <style>
-        ul {
-            -webkit-padding-start:0;
-            padding-left:10px;
-        }
-        li {
-          list-style: none;
-        }
-    </style>
 <script src="/jquery/jquery.js"></script>
 <script src="/moment/moment.min.js"></script>
+<link rel="stylesheet" type="text/css" href="public/css/global.css">
 </head>
 <body>
     <h1>Replay Data</h1>
@@ -24,17 +16,39 @@
         
     </ul>
     <script>
-            let i = 0;
             $.get('/user/{{userId}}/events').done(function(data) {
                 console.log(data);
                 eventList = data;
             });
-            $('.jsReplayButton').on('click', () => {
-                
-                var e0 = moment(eventList[0].completionTime);
-                var t0 = moment().subtract(e0).format('hh:mm:ss.SSS');
+            function renderCursorEvent(divClass) {
+                // divClass SHOULD BE "ring" OR "dot"
+                let el = document.createElement('div');
+                el.className = divClass;
+                el.style.left = eventList[i].coordinates.x + "px";
+                el.style.top = eventList[i].coordinates.y + "px";
+                $(document.body.appendChild(el)).fadeOut(4000, function(){$(this).remove()});
+            }
 
-                setInterval(() => document.body.innerHTML = t0, 100)
+            function replayUserEvents(){
+                if(eventList){
+                    for(let i = 0; i < eventList.length; i++) {
+                        setTimeout(() => {
+                            switch(eventList[i].eventType){
+                                case 'cursor-move':
+                                    renderCursorEvent("dot");
+                                    break;
+                                case 'mousedown':
+                                    renderCursorEvent("ring");
+                                    break;
+                            };
+                        }, eventList[i].downtime);
+                        if(i === eventList.length) alert("finished");
+                    };
+                }
+            };
+
+            $('.jsReplayButton').on('click', () => {
+                replayUserEvents();
             });
     </script>
 </body>
