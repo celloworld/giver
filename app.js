@@ -1,126 +1,23 @@
-var express = require('express'),
-    app = express(),
-    engines = require('consolidate'),
-    MongoClient = require('mongodb').MongoClient,
-    bodyParser = require('body-parser'),
-    assert = require('assert'),
-    moment = require('moment'),
-    shortid = require('shortid'),
-    ObjectId = require('mongodb').ObjectID;
+"use strict";
 
-app.use(errorHandler);
-app.engine('html', engines.nunjucks);
-app.set('view engine', 'html');
-app.set('views', __dirname + '/views');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
-app.use('/moment', express.static(__dirname + '/node_modules/moment/min/'));
-app.use('/public', express.static(__dirname + '/public'));
+const boot = require('./boot');
+const server = require('express')();
+const app = boot(server);
 
-function cl(el){console.log(el)};
+module.exports = app;
 
-// Handler for internal server errors
-function errorHandler(err, req, res, next) {
-    if(err){
-        console.error("error message:\n", err.message);
-        console.error("error stack:\n", err.stack);
-    }
-    res.status(500).render('error_template', { error: err });
-}
+if (!module.parent) {
 
-MongoClient.connect('mongodb://localhost:27017/a', function(err, db) {
-    let testColldb = db.collection('test');
-    assert.equal(null, err, "error connecting to MongoClient @ __dirname");
-    console.log("Successfully connected to MongoDB... sweeeet");
-
-    app.get('/', function(req, res, next) {
-        // window.onload = function() {
-            // document.onmousemove = handleMouseMove;
-        // }
-        var today = moment().format('MM/DD/YYYY hh:mm:ss.SSS').toString();
-        console.log(today);
-        function checkUserForCookie(){
-            // TODO: compare incoming user profile against preceding profiles
-            //       if user exists, get id, insert visit date and duration to user profile
-            // TODO: Aggregate a timeline across multiple sessions for returning users
-            // TODO: return UserID to index
-            return;
-        };
-        res.render('index', checkUserForCookie());
-    });
-    app.post('/save', function(req, res, next) {
-        // TODO: make sure req.body looks right, it should have keys: sessionData, userID
-        let sessionData = req.body.sessionData;
-        let userID = req.body.userID || null;
-        if (userID) {
-            testColldb.update({"_id": userID}, { $push: { "sessionData": { $each: sessionData} } })
-            .then(function(doc) {
-                res.json({message: "updated " + userID + " with " + sessionData.length + " events", insertedId: userID});
-            })
-            .catch(function(err) {
-                errorHandler(err);
-            });
-        } else {
-            testColldb.insertOne({"sessionData": sessionData})
-            .then(function(result) {
-                res.json({message: 'created user with _id: ' + result.insertedId, insertedId: result.insertedId});
-            })
-            .catch(function(err) {
-                errorHandler(err);
-            });
-        }
+    process.addListener('uncaughtException', function (err) {
+        console.error('Uncaught exception!');
+        console.error(err.stack || err);
+        process.exit(1)
     });
 
-    app.get('/history', function(req, res, next){
-        var userList = testColldb.find({},{_id:1}).toArray(function(err, docs) {
-            res.render('history', { 'userList' : docs });
-            console.log(docs);
-        });;
+    app.listen(app.get('port'), function (){
+        console.error('\x1b[32mGiver App\x1b[0m running on http://%s:%d',
+        this.address().address,
+        this.address().port);
     })
 
-    app.get('/replay', function(req, res, next) {
-        let user = new ObjectId(req.query.user);
-        cl(user);
-        if(!user){
-            console.log("FAILED TO FIND USER!\nquery: " + req.query);
-            res.redirect('/history');
-        } else{
-            var userData = testColldb.findOne({"_id": user});
-            userData.then((doc) => {
-                res.render('replay', {
-                    'eventList': doc.sessionData,
-                    'userId': req.query.user
-                });
-            });
-        }
-    });
-
-    app.get('/user/:userId/events', function(req, res, next) {
-        let user = new ObjectId(req.params.userId);
-        cl(user);
-        if(!user){
-            console.log("FAILED TO FIND USER!\nquery: " + req.query);
-            response.status(404).json({error: "FAILED TO FIND USER!"});
-        } else{
-            var userData = testColldb.findOne({"_id": user});
-            userData.then((doc) => {
-                res.json(doc.sessionData)
-            });
-        }
-    });
-    
-
-    var server = app.listen(3000, function() {
-        var port = server.address().port;
-        console.log('Express server listening on port %s.', port);
-    });
-
-});
-
-
-
-
-
-
-
+}
