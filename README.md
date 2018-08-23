@@ -1,12 +1,14 @@
 # taker
 
-Tracks user events with the intended goal of realtime playback.
-TODO: sniff client specs (window size, operating system, browser/version, etc.)
+Tracks user events with the eventual goal of realtime playback.
+BIG TODO: sniff client specs (window size, operating system, browser/version, etc.)
     considering: https://github.com/matomo-org/device-detector
 
 TODO: add screenshot library to support and validate sniffed client specs
 
-### Express/node app not tested and barely working sometimes with following dependencies:
+### Express/node app developed using chrome v68, no tests yet :(
+
+## Dependencies:
 
 #### Node v6.11.2
 
@@ -16,6 +18,6 @@ TODO: add screenshot library to support and validate sniffed client specs
 
 ## How to use
 
-navigate to project directory in shell and type node app.js
-default port:3000
-cross fingers
+navigate to project directory in shell
+`npm install` then `node app.js`
+default port is 3000
