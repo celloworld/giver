@@ -1,4 +1,4 @@
-# giver
+# taker
 
 Tracks user events with the intended goal of realtime playback.
 TODO: sniff client specs (window size, operating system, browser/version, etc.)
